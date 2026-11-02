@@ -9,6 +9,7 @@ import {
   ArrowRight,
   RefreshCw,
   Trash2,
+  Zap,
 } from "lucide-react";
 import type { PalmSlot } from "../api";
 import { validateUpload } from "../api";
@@ -21,6 +22,8 @@ interface UploadViewProps {
   onRunAnalysis: () => void;
   onLoadSample: (pair: string) => void;
   isAnalyzing: boolean;
+  sharpenStrength: number;
+  setSharpenStrength: (val: number) => void;
 }
 
 export const UploadView: React.FC<UploadViewProps> = ({
@@ -31,6 +34,8 @@ export const UploadView: React.FC<UploadViewProps> = ({
   onRunAnalysis,
   onLoadSample,
   isAnalyzing,
+  sharpenStrength,
+  setSharpenStrength,
 }) => {
   const [validatingSide, setValidatingSide] = useState<string | null>(null);
   const [draggingSide, setDraggingSide] = useState<string | null>(null);
@@ -547,9 +552,72 @@ export const UploadView: React.FC<UploadViewProps> = ({
       </div>
 
       {/* 2-Slot Grid */}
-      <div className="grid-2" style={{ marginBottom: "24px" }}>
+      <div className="grid-2" style={{ marginBottom: "20px" }}>
         {renderSlot("Left", leftPalm, leftInputRef)}
         {renderSlot("Right", rightPalm, rightInputRef)}
+      </div>
+
+      {/* Pre-Processing Sharpness Enhancement Bar */}
+      <div
+        className="glass-panel"
+        style={{
+          marginBottom: "20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "14px",
+          padding: "14px 20px",
+          background: "rgba(139, 92, 246, 0.08)",
+          borderColor: "rgba(139, 92, 246, 0.28)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Zap size={20} color="#22D3EE" />
+          <div>
+            <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#F8FAFC" }}>
+              Pre-Processing Sharpness Enhancement (Unsharp Mask)
+            </div>
+            <div style={{ fontSize: "0.74rem", color: "#94A3B8" }}>
+              Sharpen edge gradients and fine creases before CLAHE, segmentation, and skeletonization.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {[
+            { val: 0.0, label: "Off (0.0x)" },
+            { val: 0.3, label: "Mild (0.3x)" },
+            { val: 0.6, label: "Normal (0.6x)" },
+            { val: 1.0, label: "High (1.0x)" },
+          ].map((lvl) => (
+            <button
+              key={lvl.val}
+              type="button"
+              onClick={() => setSharpenStrength(lvl.val)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                background:
+                  sharpenStrength === lvl.val
+                    ? "rgba(34, 211, 238, 0.2)"
+                    : "rgba(255, 255, 255, 0.04)",
+                border: `1px solid ${
+                  sharpenStrength === lvl.val
+                    ? "#22D3EE"
+                    : "rgba(255, 255, 255, 0.1)"
+                }`,
+                color: sharpenStrength === lvl.val ? "#22D3EE" : "#94A3B8",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {lvl.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Action Bar */}

@@ -155,6 +155,7 @@ class AnalysisPayload(BaseModel):
     left_b64: str
     right_name: str
     right_b64: str
+    sharpen_strength: float = 0.6
 
 
 @app.post("/api/analyze")
@@ -174,10 +175,10 @@ def analyze_palms(payload: AnalysisPayload):
             detail=f"Validation failed: Left errors={v_left.errors}, Right errors={v_right.errors}"
         )
         
-    stages_left = run_pipeline(v_left.image, v_left.hand_mask)
+    stages_left = run_pipeline(v_left.image, v_left.hand_mask, sharpen_strength=payload.sharpen_strength)
     feats_left, ann_left = analyse_palm(stages_left, "Left")
     
-    stages_right = run_pipeline(v_right.image, v_right.hand_mask)
+    stages_right = run_pipeline(v_right.image, v_right.hand_mask, sharpen_strength=payload.sharpen_strength)
     feats_right, ann_right = analyse_palm(stages_right, "Right")
     
     # Process stage previews into base64

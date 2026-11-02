@@ -53,12 +53,25 @@ def histogram_image(before: np.ndarray, after: np.ndarray, mask: np.ndarray | No
     return canvas
 
 
-def run_pipeline(bgr: np.ndarray, hand_mask: np.ndarray | None = None) -> dict[str, np.ndarray]:
+def enhance_sharpness(img: np.ndarray, strength: float = 0.6) -> np.ndarray:
+    """Enhance edge contrast and crease definition before processing via unsharp masking.
+
+    Formula: sharpened = original + strength * (original - gaussian_blur)
+    """
+    if strength <= 0.01:
+        return img
+    blurred = cv2.GaussianBlur(img, (0, 0), sigmaX=2.0, sigmaY=2.0)
+    sharpened = cv2.addWeighted(img, 1.0 + strength, blurred, -strength, 0)
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
+
+
+def run_pipeline(bgr: np.ndarray, hand_mask: np.ndarray | None = None, sharpen_strength: float = 0.0) -> dict[str, np.ndarray]:
     """Return a dict of stage name -> display image (RGB or single channel).
 
     Keys starting with "_" are internal arrays used by the feature stage.
 
     Techniques used:
+      0. Pre-processing sharpness enhancement     (unsharp masking)
       1. Resize + min-max normalisation           (geometric / intensity normalisation)
       2. RGB -> grayscale                         (colour-space conversion)
       3. Gaussian blur                            (noise reduction)
@@ -70,6 +83,9 @@ def run_pipeline(bgr: np.ndarray, hand_mask: np.ndarray | None = None) -> dict[s
 
     hand_mask: optional full-size mask from validation (avoids segmenting twice).
     """
+    if sharpen_strength > 0.01:
+        bgr = enhance_sharpness(bgr, sharpen_strength)
+
     h, w = bgr.shape[:2]
     scale = TARGET_WIDTH / w
     img = cv2.resize(bgr, (TARGET_WIDTH, int(h * scale)),

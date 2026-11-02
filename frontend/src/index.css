@@ -22,6 +22,89 @@
   --text-muted: #64748B;
 }
 
+/* Light Theme Variables */
+[data-theme="light"] {
+  --bg-deep: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-hover: rgba(241, 245, 249, 0.98);
+  --border-glass: rgba(15, 23, 42, 0.08);
+  --border-accent: rgba(124, 58, 237, 0.35);
+  --border-cyan: rgba(2, 132, 199, 0.35);
+  --violet: #7C3AED;
+  --violet-glow: rgba(124, 58, 237, 0.15);
+  --cyan: #0284C7;
+  --cyan-glow: rgba(2, 132, 199, 0.15);
+  --lavender: #6D28D9;
+  --emerald: #059669;
+  --emerald-glow: rgba(5, 150, 105, 0.15);
+  --amber: #D97706;
+  --rose: #E11D48;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(124, 58, 237, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(2, 132, 199, 0.04) 0%, transparent 45%),
+    linear-gradient(180deg, #F8FAFC 0%, #EEF2F6 50%, #F8FAFC 100%);
+}
+
+[data-theme="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.95);
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .top-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .hero-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .hero-how-it-works {
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .hologram-img {
+  mix-blend-mode: normal;
+  border-radius: 16px;
+  filter: drop-shadow(0 0 20px rgba(2, 132, 199, 0.25));
+}
+
+[data-theme="light"] .docked-assistant-bar {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .app-footer {
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .theme-pill,
+[data-theme="light"] .user-badge {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

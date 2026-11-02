@@ -112,16 +112,18 @@ export async function validateUpload(side: string, file: File): Promise<any> {
 
 export async function runAnalysis(
   left: { name: string; raw_b64: string },
-  right: { name: string; raw_b64: string }
+  right: { name: string; raw_b64: string },
+  sharpen_strength: number = 0.6
 ): Promise<AnalysisResult> {
   const res = await fetch(`${API_BASE}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: jsonStringify({
+    body: JSON.stringify({
       left_name: left.name,
       left_b64: left.raw_b64,
       right_name: right.name,
       right_b64: right.raw_b64,
+      sharpen_strength,
     }),
   });
   if (!res.ok) {

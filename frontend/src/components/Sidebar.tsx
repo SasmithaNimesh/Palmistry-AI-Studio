@@ -107,13 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div
               key={item.id}
               className={`nav-item ${isActive ? "active" : ""}`}
-              onClick={() => {
-                if (item.id === "history" || item.id === "settings") {
-                  alert(`${item.label} preferences are active.`);
-                  return;
-                }
-                setTab(item.id);
-              }}
+              onClick={() => setTab(item.id)}
             >
               <Icon size={17} color={isActive ? "#FFFFFF" : "#94A3B8"} />
               <span>{item.label}</span>
