@@ -74,16 +74,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     rightPalm?.preview_url ||
     leftPalm?.preview_url;
 
-  // Pipeline 8 stages for horizontal timeline
+  // Ensure base64 string or data URL formats cleanly
+  const ensureDataUrl = (imgStr?: string) => {
+    if (!imgStr) return "";
+    if (imgStr.startsWith("data:") || imgStr.startsWith("http")) return imgStr;
+    return `data:image/jpeg;base64,${imgStr}`;
+  };
+
+  // Pipeline 8 stages for horizontal timeline (matching palmreader/preprocessing.py)
   const pipelineStages = [
-    { key: "01_original", label: "Original" },
-    { key: "02_grayscale", label: "Grayscale" },
-    { key: "03_denoised", label: "Denoise" },
-    { key: "04_clahe", label: "CLAHE" },
-    { key: "05_segmented", label: "Segmentation" },
-    { key: "06_edges", label: "Edges" },
-    { key: "07_morphology", label: "Morphology" },
-    { key: "10_final", label: "Final" },
+    { key: "1 Resized + normalised", label: "Original" },
+    { key: "2 Grayscale", label: "Grayscale" },
+    { key: "3 Gaussian blur (denoise)", label: "Denoise" },
+    { key: "4 CLAHE contrast", label: "CLAHE" },
+    { key: "5 Hand segmentation", label: "Segmentation" },
+    { key: "7a Sobel gradient", label: "Edges" },
+    { key: "6 Black-hat (line boost)", label: "Morphology" },
+    { key: "8 Threshold + morphology", label: "Final" },
   ];
 
   const stagesData = analysis?.stages?.Right || analysis?.stages?.Left || {};
@@ -356,7 +363,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               >
                 {leftPalm?.preview_url ? (
                   <img
-                    src={`data:image/jpeg;base64,${leftPalm.preview_url}`}
+                    src={ensureDataUrl(leftPalm.preview_url)}
                     alt="Left Palm"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -431,7 +438,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               >
                 {rightPalm?.preview_url ? (
                   <img
-                    src={`data:image/jpeg;base64,${rightPalm.preview_url}`}
+                    src={ensureDataUrl(rightPalm.preview_url)}
                     alt="Right Palm"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -705,7 +712,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             >
               {annotatedImage ? (
                 <img
-                  src={`data:image/jpeg;base64,${annotatedImage}`}
+                  src={ensureDataUrl(annotatedImage)}
                   alt="Detected Creases"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -756,7 +763,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   >
                     {b64 ? (
                       <img
-                        src={`data:image/jpeg;base64,${b64}`}
+                        src={ensureDataUrl(b64)}
                         alt={st.label}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />

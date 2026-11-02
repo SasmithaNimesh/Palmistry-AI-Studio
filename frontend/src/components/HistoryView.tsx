@@ -206,7 +206,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 >
                   {sess.leftPalm?.preview_url ? (
                     <img
-                      src={`data:image/jpeg;base64,${sess.leftPalm.preview_url}`}
+                      src={sess.leftPalm.preview_url.startsWith("data:") ? sess.leftPalm.preview_url : `data:image/jpeg;base64,${sess.leftPalm.preview_url}`}
                       alt="Left"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
@@ -229,7 +229,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 >
                   {sess.rightPalm?.preview_url ? (
                     <img
-                      src={`data:image/jpeg;base64,${sess.rightPalm.preview_url}`}
+                      src={sess.rightPalm.preview_url.startsWith("data:") ? sess.rightPalm.preview_url : `data:image/jpeg;base64,${sess.rightPalm.preview_url}`}
                       alt="Right"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />

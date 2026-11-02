@@ -115,10 +115,45 @@ def validate_upload(name: str, data: bytes, side: str) -> ValidationResult:
     res.hand_mask = seg.mask
     frac = float((seg.mask > 0).mean())
     res.metrics = {"width": w, "height": h, "hand_fraction": round(frac, 3),
-                   "segmentation": seg.method}
-    if frac < MIN_HAND_FRACTION:
+                   "segmentation": seg.method, "plausibility": round(seg.score, 2)}
+    if seg.method == "none" or frac < MIN_HAND_FRACTION:
         res.errors.append(f"{side} palm: no clear palm detected (hand covers only {frac:.0%} of the photo). "
                           "Show the full open palm facing the camera against a plain, contrasting background.")
+        res.ok = False
+        return res
+
+    # 1. Plausibility check: verify shape resembles an open hand with fingers
+    if seg.score < 0.20:
+        res.errors.append(f"{side} palm: the detected object does not resemble a human hand (score: {seg.score:.2f}). "
+                          "Ensure your hand is open with fingers spread facing the camera.")
+        res.ok = False
+        return res
+
+    # 2. Skin Chrominance Verification across all human Fitzpatrick skin tones
+    ycrcb = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb)
+    is_skin = (
+        (ycrcb[:, :, 1] >= 118) & (ycrcb[:, :, 1] <= 200) &
+        (ycrcb[:, :, 2] >= 65) & (ycrcb[:, :, 2] <= 155)
+    )
+    hand_mask_bool = seg.mask > 0
+    skin_count = (is_skin & hand_mask_bool).sum()
+    total_count = max(1, hand_mask_bool.sum())
+    skin_fraction = float(skin_count) / float(total_count)
+    res.metrics["skin_fraction"] = round(skin_fraction, 3)
+
+    if skin_fraction < 0.35:
+        res.errors.append(f"{side} palm: no human hand or skin detected. "
+                          "Please upload a real photograph of your palm.")
+        res.ok = False
+        return res
+
+    # 3. Palmar Core Disc verification
+    dist = cv2.distanceTransform(seg.mask, cv2.DIST_L2, 5)
+    max_core_radius = float(dist.max())
+    min_expected_radius = max(18.0, min(h, w) * 0.035)
+    if max_core_radius < min_expected_radius:
+        res.errors.append(f"{side} palm: unable to find a clear palm center. "
+                          "Hold your hand flat and closer to the camera.")
         res.ok = False
         return res
 

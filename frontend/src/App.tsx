@@ -8,6 +8,7 @@ import {
   Lock,
   ShieldAlert,
   Check,
+  Settings,
 } from "lucide-react";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
@@ -319,14 +320,22 @@ export function App() {
               <HelpCircle size={16} />
             </button>
 
-            {/* User Profile */}
-            <div className="user-badge" onClick={() => setCurrentTab("settings")}>
-              <div className="user-avatar-circle">U</div>
-              <span style={{ fontSize: "0.8rem", color: "#CBD5E1" }}>
-                Welcome, <strong style={{ color: "#FFFFFF" }}>User</strong>
-              </span>
-              <ChevronDown size={14} color="#94A3B8" />
-            </div>
+            {/* Settings Action Button */}
+            <button
+              className="theme-pill"
+              onClick={() => setCurrentTab("settings")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "7px",
+                cursor: "pointer",
+                background: currentTab === "settings" ? "rgba(124, 58, 237, 0.2)" : undefined,
+                borderColor: currentTab === "settings" ? "#8B5CF6" : undefined,
+              }}
+            >
+              <Settings size={15} color="#A78BFA" />
+              <span>Settings</span>
+            </button>
           </div>
         </header>
 
