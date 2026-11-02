@@ -823,6 +823,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div
+            className="reading-book-wrapper"
             style={{
               display: "flex",
               alignItems: "center",
