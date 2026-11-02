@@ -1,0 +1,35 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# real palm photos and everything derived from them - NEVER commit or zip these
+photos/*
+!photos/README.txt
+outputs/
+
+# python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# frontend / node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.vite/
+*.local
+
+# logs and system
+*.log
+.system_generated/
+.DS_Store
+Thumbs.db
+
+# build artefacts
+*.zip
+prof.out

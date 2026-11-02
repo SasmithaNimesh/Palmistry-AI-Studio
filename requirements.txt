@@ -1,0 +1,9 @@
+# Runtime dependencies, pinned to the versions this project was tested with (Python 3.13).
+streamlit==1.65.0
+opencv-python-headless==5.0.0.93
+numpy==2.5.3
+Pillow==12.3.0
+scikit-image==0.26.0
+google-genai==2.29.0
+fastapi>=0.115.0
+uvicorn>=0.30.0

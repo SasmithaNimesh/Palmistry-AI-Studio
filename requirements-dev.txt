@@ -1,0 +1,5 @@
+# Extra tools for testing and building the report (not needed to run the app).
+-r requirements.txt
+pytest==9.0.2
+python-docx==1.2.0
+playwright==1.63.0   # only for tools/e2e_ui.py; uses your installed Edge/Chrome

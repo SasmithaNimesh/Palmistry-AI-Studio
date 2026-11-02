@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\USER\Desktop\palm_reading_app
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1
+collected 120 items
+
+tests\test_features.py ..................................                [ 28%]
+tests\test_llm.py ..................                                     [ 43%]
+tests\test_segmentation.py ............................................. [ 80%]
+.....                                                                    [ 85%]
+tests\test_validation.py ..................                              [100%]
+
+======================= 120 passed in 177.71s (0:02:57) =======================
