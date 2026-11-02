@@ -8,6 +8,7 @@ import {
   Layers,
   ArrowRight,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import type { PalmSlot } from "../api";
 import { validateUpload } from "../api";
@@ -32,15 +33,12 @@ export const UploadView: React.FC<UploadViewProps> = ({
   isAnalyzing,
 }) => {
   const [validatingSide, setValidatingSide] = useState<string | null>(null);
+  const [draggingSide, setDraggingSide] = useState<string | null>(null);
 
   const leftInputRef = useRef<HTMLInputElement>(null);
   const rightInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    side: "Left" | "Right"
-  ) => {
-    const file = e.target.files?.[0];
+  const processFile = async (file: File, side: "Left" | "Right") => {
     if (!file) return;
 
     setValidatingSide(side);
@@ -65,6 +63,43 @@ export const UploadView: React.FC<UploadViewProps> = ({
     }
   };
 
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    side: "Left" | "Right"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file, side);
+    }
+    // Reset input value so selecting the same file triggers onChange again
+    e.target.value = "";
+  };
+
+  const handleDragOver = (e: React.DragEvent, side: "Left" | "Right") => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggingSide !== side) {
+      setDraggingSide(side);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingSide(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, side: "Left" | "Right") => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingSide(null);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processFile(files[0], side);
+    }
+  };
+
   const isReady = leftPalm?.ok && rightPalm?.ok;
 
   const renderSlot = (
@@ -73,6 +108,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
     inputRef: React.RefObject<HTMLInputElement | null>
   ) => {
     const isValidating = validatingSide === side;
+    const isDragging = draggingSide === side;
 
     return (
       <div
@@ -81,8 +117,64 @@ export const UploadView: React.FC<UploadViewProps> = ({
           display: "flex",
           flexDirection: "column",
           position: "relative",
+          borderColor: isDragging
+            ? "var(--cyan)"
+            : slot?.ok
+            ? "rgba(16, 185, 129, 0.4)"
+            : "var(--border-glass)",
+          boxShadow: isDragging
+            ? "0 0 30px rgba(34, 211, 238, 0.35)"
+            : undefined,
+          transition: "all 0.2s ease",
         }}
+        onDragOver={(e) => handleDragOver(e, side)}
+        onDragEnter={(e) => handleDragOver(e, side)}
+        onDragLeave={(e) => handleDragLeave(e)}
+        onDrop={(e) => handleDrop(e, side)}
       >
+        {/* Hidden File Input ALWAYS mounted in DOM */}
+        <input
+          type="file"
+          ref={inputRef}
+          style={{ display: "none" }}
+          accept="image/jpeg,image/png,image/jpg"
+          onChange={(e) => handleFileChange(e, side)}
+        />
+
+        {/* Dragging Overlay */}
+        {isDragging && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(14, 19, 34, 0.9)",
+              borderRadius: "16px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 30,
+              border: "2px dashed #22D3EE",
+              pointerEvents: "none",
+            }}
+          >
+            <UploadCloud size={48} color="#22D3EE" />
+            <div
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                color: "#F8FAFC",
+                marginTop: "12px",
+              }}
+            >
+              Drop to {slot ? "Replace" : "Upload"} {side} Palm
+            </div>
+            <div style={{ fontSize: "0.82rem", color: "#94A3B8" }}>
+              JPG, JPEG or PNG
+            </div>
+          </div>
+        )}
+
         <div
           style={{
             display: "flex",
@@ -117,8 +209,10 @@ export const UploadView: React.FC<UploadViewProps> = ({
                 background: "rgba(0, 0, 0, 0.4)",
                 borderRadius: "12px",
                 border: "1px solid var(--border-glass)",
+                display: "block",
               }}
             />
+            {/* Top action buttons */}
             <div
               style={{
                 position: "absolute",
@@ -126,15 +220,55 @@ export const UploadView: React.FC<UploadViewProps> = ({
                 right: "10px",
                 display: "flex",
                 gap: "8px",
+                zIndex: 10,
               }}
             >
               <button
+                type="button"
                 className="btn-secondary"
-                style={{ padding: "6px 12px", fontSize: "0.8rem" }}
-                onClick={() => inputRef.current?.click()}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "0.8rem",
+                  background: "rgba(18, 25, 44, 0.9)",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  inputRef.current?.click();
+                }}
+                title="Replace photo"
               >
-                <RefreshCw size={13} /> Replace
+                <RefreshCw size={13} color="#22D3EE" /> Replace
               </button>
+
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{
+                  padding: "6px 10px",
+                  fontSize: "0.8rem",
+                  background: "rgba(18, 25, 44, 0.9)",
+                  color: "#F87171",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (side === "Left") setLeftPalm(null);
+                  else setRightPalm(null);
+                }}
+                title="Remove photo"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "#94A3B8",
+                marginTop: "6px",
+                textAlign: "center",
+              }}
+            >
+              Drag & drop a new image here anytime to replace
             </div>
           </div>
         ) : (
@@ -162,13 +296,6 @@ export const UploadView: React.FC<UploadViewProps> = ({
               (e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.35)")
             }
           >
-            <input
-              type="file"
-              ref={inputRef}
-              style={{ display: "none" }}
-              accept="image/jpeg,image/png,image/jpg"
-              onChange={(e) => handleFileChange(e, side)}
-            />
             <div
               style={{
                 width: "56px",
@@ -194,7 +321,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
             >
               {isValidating
                 ? "Running Quality Diagnostics…"
-                : `Click or Drag ${side} Palm Photo`}
+                : `Click to Browse or Drag ${side} Palm Photo Here`}
             </div>
             <div style={{ fontSize: "0.78rem", color: "#94A3B8" }}>
               JPG, JPEG or PNG • Max 15MB • Plain Background
@@ -392,14 +519,14 @@ export const UploadView: React.FC<UploadViewProps> = ({
             Palm Capture & Quality Gate
           </h2>
           <p style={{ color: "#94A3B8", fontSize: "0.9rem" }}>
-            Upload both palms or choose a curated sample pair to run instant CV
-            diagnostics.
+            Drag & drop images directly, click to browse, or select a demo pair.
           </p>
         </div>
 
         {/* Demo Fast Loaders */}
         <div style={{ display: "flex", gap: "10px" }}>
           <button
+            type="button"
             className="btn-secondary"
             onClick={() => onLoadSample("pair1")}
             style={{ fontSize: "0.85rem", padding: "8px 14px" }}
@@ -408,6 +535,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
             <span>Load Demo (Pair 1)</span>
           </button>
           <button
+            type="button"
             className="btn-secondary"
             onClick={() => onLoadSample("pair2")}
             style={{ fontSize: "0.85rem", padding: "8px 14px" }}
@@ -468,7 +596,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
             <div style={{ fontSize: "0.8rem", color: "#94A3B8" }}>
               {isReady
                 ? "Ready to execute the 10-stage digital image processing pipeline."
-                : "Please upload or load sample photos for both Left and Right palms."}
+                : "Drag & drop photos or select a demo pair to continue."}
             </div>
           </div>
         </div>
