@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Moon, HelpCircle, ChevronRight, ChevronDown, Lock, ShieldAlert } from "lucide-react";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import { UploadView } from "./components/UploadView";
@@ -34,18 +35,21 @@ export function App() {
   const [readingLanguage, setReadingLanguage] = useState<"en" | "si" | "ta">("en");
   const [isReadingLoading, setIsReadingLoading] = useState<boolean>(false);
 
-  // Load backend status on mount
+  // Load backend status and initialize with demo data for rich dashboard presentation
   useEffect(() => {
     fetchStatus()
       .then((s) => setStatus(s))
       .catch((err) => console.error("Status fetch error:", err));
+
+    // Auto-load sample pair 1 on first launch to match reference UI dashboard
+    handleLoadSample("pair1", false);
   }, []);
 
-  // Fast Sample Loader
-  const handleLoadSample = async (pairName: string) => {
+  // Sample Loader
+  const handleLoadSample = async (pairName: string, shouldNavigate: boolean = true) => {
     try {
       const data = await fetchSample(pairName);
-      setLeftPalm({
+      const lSlot: PalmSlot = {
         name: data.left.name,
         raw_b64: data.left.raw_b64,
         preview_url: data.left.b64,
@@ -53,9 +57,9 @@ export function App() {
         metrics: data.left.metrics,
         errors: data.left.errors,
         warnings: data.left.warnings,
-      });
+      };
 
-      setRightPalm({
+      const rSlot: PalmSlot = {
         name: data.right.name,
         raw_b64: data.right.raw_b64,
         preview_url: data.right.b64,
@@ -63,11 +67,23 @@ export function App() {
         metrics: data.right.metrics,
         errors: data.right.errors,
         warnings: data.right.warnings,
-      });
+      };
 
-      setCurrentTab("upload");
+      setLeftPalm(lSlot);
+      setRightPalm(rSlot);
+
+      // Auto run analysis on sample to populate pipeline & detected lines overview
+      const res = await runAnalysis(
+        { name: lSlot.name, raw_b64: lSlot.raw_b64 },
+        { name: rSlot.name, raw_b64: rSlot.raw_b64 }
+      );
+      setAnalysis(res);
+
+      if (shouldNavigate) {
+        setCurrentTab("upload");
+      }
     } catch (err: any) {
-      alert(`Could not load sample: ${err.message}`);
+      console.warn("Could not auto-load sample:", err.message);
     }
   };
 
@@ -82,7 +98,7 @@ export function App() {
         { name: rightPalm.name, raw_b64: rightPalm.raw_b64 }
       );
       setAnalysis(res);
-      setReading(null); // Clear previous reading when new analysis runs
+      setReading(null);
       setCurrentTab("cvlab");
     } catch (err: any) {
       alert(`Analysis failed: ${err.message}`);
@@ -107,7 +123,7 @@ export function App() {
     }
   };
 
-  // Change Language (instant re-query or translation without re-analyzing)
+  // Change Language
   const handleChangeLanguage = (lang: "en" | "si" | "ta") => {
     setReadingLanguage(lang);
     if (analysis && reading) {
@@ -131,74 +147,140 @@ export function App() {
         currentTab={currentTab}
         setTab={setCurrentTab}
         status={status}
-        hasAnalysis={Boolean(analysis)}
+        leftPalm={leftPalm}
+        rightPalm={rightPalm}
+        analysis={analysis}
+        hasReading={Boolean(reading)}
         onReset={handleReset}
       />
 
-      {/* Main View Port */}
-      <main className="main-content">
-        {currentTab === "dashboard" && (
-          <DashboardView
-            onStartAnalysis={() => setCurrentTab("upload")}
-            onLoadSample={handleLoadSample}
-            leftPalm={leftPalm}
-            rightPalm={rightPalm}
-            analysis={analysis}
-            hasReading={Boolean(reading)}
-            onNavigate={setCurrentTab}
-          />
-        )}
+      {/* Main App Wrapper */}
+      <div className="main-wrapper">
+        {/* Top Header Navigation Bar */}
+        <header className="top-header">
+          <div>
+            <h2 className="top-header-title">AI Palm Reading &amp; Analysis</h2>
+            <p className="top-header-subtitle">
+              Discover meaningful insights through advanced AI and Computer Vision
+            </p>
+          </div>
 
-        {currentTab === "upload" && (
-          <UploadView
-            leftPalm={leftPalm}
-            rightPalm={rightPalm}
-            setLeftPalm={setLeftPalm}
-            setRightPalm={setRightPalm}
-            onRunAnalysis={handleRunAnalysis}
-            onLoadSample={handleLoadSample}
-            isAnalyzing={isAnalyzing}
-          />
-        )}
+          <div className="top-header-actions">
+            <button className="theme-pill" onClick={() => alert("Theme: Luxury Dark (Default)")}>
+              <Moon size={13} color="#22D3EE" />
+              <span>Dark</span>
+              <ChevronRight size={13} />
+            </button>
 
-        {currentTab === "cvlab" && (
-          <CvLabView
-            analysis={analysis}
-            onNavigateToUpload={() => setCurrentTab("upload")}
-          />
-        )}
+            <button
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid var(--border-glass)",
+                color: "#94A3B8",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              onClick={() => setCurrentTab("methodology")}
+            >
+              <HelpCircle size={16} />
+            </button>
 
-        {currentTab === "features" && (
-          <FeaturesView
-            analysis={analysis}
-            onNavigateToUpload={() => setCurrentTab("upload")}
-          />
-        )}
+            <div className="user-badge">
+              <div className="user-avatar-circle">U</div>
+              <span style={{ fontSize: "0.8rem", color: "#CBD5E1" }}>
+                Welcome, <strong style={{ color: "#FFFFFF" }}>User</strong>
+              </span>
+              <ChevronDown size={14} color="#94A3B8" />
+            </div>
+          </div>
+        </header>
 
-        {currentTab === "reading" && (
-          <ReadingView
-            features={analysis ? analysis.features : null}
-            reading={reading}
-            language={readingLanguage}
-            onChangeLanguage={handleChangeLanguage}
-            onGenerateReading={handleGenerateReading}
-            isLoading={isReadingLoading}
-            onNavigateToUpload={() => setCurrentTab("upload")}
-          />
-        )}
+        {/* View Router */}
+        <main className="main-content">
+          {currentTab === "dashboard" && (
+            <DashboardView
+              onStartAnalysis={() => setCurrentTab("upload")}
+              onLoadSample={(p) => handleLoadSample(p, true)}
+              leftPalm={leftPalm}
+              rightPalm={rightPalm}
+              analysis={analysis}
+              hasReading={Boolean(reading)}
+              onNavigate={setCurrentTab}
+              onQuickAsk={() => setCurrentTab("assistant")}
+            />
+          )}
 
-        {currentTab === "assistant" && (
-          <AssistantView
-            features={analysis ? analysis.features : null}
-            reading={reading}
-            language={readingLanguage}
-            onChangeLanguage={setReadingLanguage}
-            onNavigateToReading={() => setCurrentTab("reading")}
-          />
-        )}
+          {currentTab === "upload" && (
+            <UploadView
+              leftPalm={leftPalm}
+              rightPalm={rightPalm}
+              setLeftPalm={setLeftPalm}
+              setRightPalm={setRightPalm}
+              onRunAnalysis={handleRunAnalysis}
+              onLoadSample={(p) => handleLoadSample(p, true)}
+              isAnalyzing={isAnalyzing}
+            />
+          )}
 
-        {currentTab === "methodology" && <MethodologyView />}
-      </main>
+          {currentTab === "cvlab" && (
+            <CvLabView
+              analysis={analysis}
+              onNavigateToUpload={() => setCurrentTab("upload")}
+            />
+          )}
+
+          {currentTab === "features" && (
+            <FeaturesView
+              analysis={analysis}
+              onNavigateToUpload={() => setCurrentTab("upload")}
+            />
+          )}
+
+          {currentTab === "reading" && (
+            <ReadingView
+              features={analysis ? analysis.features : null}
+              reading={reading}
+              language={readingLanguage}
+              onChangeLanguage={handleChangeLanguage}
+              onGenerateReading={handleGenerateReading}
+              isLoading={isReadingLoading}
+              onNavigateToUpload={() => setCurrentTab("upload")}
+            />
+          )}
+
+          {currentTab === "assistant" && (
+            <AssistantView
+              features={analysis ? analysis.features : null}
+              reading={reading}
+              language={readingLanguage}
+              onChangeLanguage={setReadingLanguage}
+              onNavigateToReading={() => setCurrentTab("reading")}
+            />
+          )}
+
+          {currentTab === "methodology" && <MethodologyView />}
+        </main>
+
+        {/* App Footer */}
+        <footer className="app-footer">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ShieldAlert size={14} color="#A78BFA" />
+            <span>
+              <strong>Important:</strong> Palmistry is for cultural and entertainment purposes only. It is not a substitute for professional advice.
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Lock size={13} color="#34D399" />
+            <span>Your privacy is important to us. Images are processed in-memory and never stored.</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
